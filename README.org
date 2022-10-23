@@ -11,7 +11,7 @@
     #+begin_src shell
   ./configure --prefix=<installation path prefix>; make
 #+end_src
-  where =<installation path prefix> is the desired installation path
+  where =<installation path prefix>= is the desired installation path
   prefix (e.g, =/usr/local=). You usually want the path prefix to match
   that used for Bigloo itself.
 
