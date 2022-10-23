@@ -1,0 +1,7 @@
+
+(declare-library! 'srfi39 
+   :version "@VERSION@"
+   :srfi '(srfi39)
+   :basename "srfi39"
+   :module-eval 'srfi39_make_lib)
+
