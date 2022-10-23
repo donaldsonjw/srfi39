@@ -71,7 +71,20 @@
    (list-ref (pregexp-match "\\s*(.*)\\s*" str) 1))
 
 (define (sh cmd . args)
-   (string-trim (system->string (format "~( )" (map sh->string (cons cmd args))))))
+   (let* ((proc-args (append (map sh->string (cons cmd args))
+                        '(:output :pipe :error :pipe :wait #t)))
+          (proc (apply run-process proc-args))
+          (exit-status (process-exit-status proc))
+          (out (process-output-port proc))
+          (err (process-error-port proc)))
+      (unwind-protect
+         (if (and (number? exit-status) (= exit-status 0))
+             (string-trim (read-string out))
+             #f)
+         (begin
+            (close-input-port out)
+            (close-input-port err)))))
+
 
 (define (build-and-exec scm-src . args)
    (let* ((tempdir ".autoconf")
@@ -82,11 +95,13 @@
       (with-output-to-file tempsrc
          (lambda () (display scm-src)))
       (unwind-protect
+         (and (apply sh
+                 (append (cons* "bigloo" "-s" args)
+                    (list "-o" tempexe tempsrc)))
+              (sh (format "./~a" tempexe)))
          (begin
-            (sh "bigloo" "-s" (format "~( )" args) "-o" tempexe tempsrc)
-            (sh (format "./~a" tempexe)))
-         (chdir "..")
-         (sh "rm" "-rf" tempdir))))
+            (chdir "..")
+            (sh "rm" "-rf" tempdir)))))
 
 (define hello-module
    "(module hello
